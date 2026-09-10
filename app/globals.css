@@ -151,3 +151,9 @@ body {
   }
   .fx-grain { display: none; }
 }
+
+/* Demos crossfade in when their capability act becomes active. */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
