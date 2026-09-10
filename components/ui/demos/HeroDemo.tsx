@@ -62,7 +62,7 @@ export function HeroDemo() {
         const r = TICK_R0 + (TICK_R1 - TICK_R0) * v
         ticks[i].setAttribute('x2', String(100 + g.cos * r))
         ticks[i].setAttribute('y2', String(100 + g.sin * r))
-        ticks[i].setAttribute('opacity', String(0.2 + 0.75 * v))
+        ticks[i].setAttribute('opacity', String(0.3 + 0.7 * v))
       }
 
       // Token waveform. An envelope keeps the ends short so it reads as a
@@ -152,7 +152,7 @@ export function HeroDemo() {
           x2={100 + g.cos * TICK_R1}
           y2={100 + g.sin * TICK_R1}
           stroke="var(--accent)"
-          strokeWidth={1.1}
+          strokeWidth={1.7}
           strokeLinecap="round"
           opacity={0.4}
         />
@@ -185,9 +185,9 @@ export function HeroDemo() {
             x2={x}
             y2={104}
             stroke="var(--accent)"
-            strokeWidth={1.15}
+            strokeWidth={1.8}
             strokeLinecap="round"
-            opacity={0.85}
+            opacity={0.9}
           />
         )
       })}

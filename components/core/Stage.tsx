@@ -60,7 +60,7 @@ export function Stage() {
       <Canvas
         dpr={[1, 1.75]}
         gl={{ antialias: true, powerPreference: 'high-performance' }}
-        camera={{ fov: 38, near: 0.1, far: 100, position: [0, 0, 11.4] }}
+        camera={{ fov: 38, near: 0.1, far: 100, position: [0, 0, 13.9] }}
       >
         <Rig />
       </Canvas>
