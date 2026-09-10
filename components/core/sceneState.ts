@@ -37,9 +37,9 @@ export const sceneState: SceneState = {
   theme: 0,
   camX: 0,
   camY: 0,
-  camZ: 11.4,
-  rotX: -0.13,
-  rotY: -0.24,
+  camZ: 13.9,
+  rotX: -0.07,
+  rotY: -0.06,
   stage: 1,
   progress: 0,
 }

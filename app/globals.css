@@ -15,10 +15,11 @@
   --accent: #ff5a5f;
   --sp: 0;
 
-  /* Aperture registration, written by Rig each frame */
-  --ap-x: 50vw;
-  --ap-y: 50vh;
-  --ap-r: 0px;
+  /* Display registration, written by Rig each frame */
+  --st-x: 50vw;
+  --st-y: 50vh;
+  --st-w: 0px;
+  --st-h: 0px;
   --stage-in: 0;
 
   /* Surfaces. Derived from --fg so they invert with the theme for free. */

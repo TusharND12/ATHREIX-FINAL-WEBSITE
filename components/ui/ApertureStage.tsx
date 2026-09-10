@@ -9,11 +9,11 @@ import { InferenceDemo } from './demos/InferenceDemo'
 import { GuardrailsDemo } from './demos/GuardrailsDemo'
 
 /**
- * The DOM layer that sits inside the 3D aperture.
+ * The DOM layer that renders on the laptop display.
  *
- * Position and radius come from --ap-x / --ap-y / --ap-r, which Rig writes each
- * frame by projecting the aperture ring into screen space — nothing here is
- * hardcoded, so it stays registered at any viewport size.
+ * Position and size come from --st-x / --st-y / --st-w / --st-h, which Rig
+ * writes each frame by projecting the laptop display into screen space —
+ * nothing here is hardcoded, so it stays registered at any viewport size.
  *
  * Only the active capability's demo is mounted. That is not just tidiness: each
  * demo runs an infinite GSAP timeline, and mounting all three would leave two
@@ -63,27 +63,21 @@ export function ApertureStage() {
       className="pointer-events-none fixed left-0 top-0 z-10"
       style={{
         transform:
-          'translate(calc(var(--ap-x, 50vw) - var(--ap-r, 0px)), calc(var(--ap-y, 50vh) - var(--ap-r, 0px)))',
-        width: 'calc(var(--ap-r, 0px) * 2)',
-        height: 'calc(var(--ap-r, 0px) * 2)',
+          'translate(calc(var(--st-x, 50vw) - var(--st-w, 0px) / 2), calc(var(--st-y, 50vh) - var(--st-h, 0px) / 2))',
+        width: 'var(--st-w, 0px)',
+        height: 'var(--st-h, 0px)',
         opacity: 'var(--stage-in, 0)',
       }}
       aria-hidden="true"
     >
-      <div className="relative h-full w-full overflow-hidden rounded-full">
-        {/* Inner hairline, just inside the 3D ring, to seat the demo in the lens. */}
-        <div
-          className="absolute inset-[6%] rounded-full"
-          style={{ border: '1px solid color-mix(in srgb, var(--fg) 10%, transparent)' }}
-        />
-
-        {/* The demos are drawn in a 200-unit box whose content spans roughly
-            30–170. Inset so that content clears the circular edge rather than
-            being clipped by it. */}
+      <div className="relative h-full w-full overflow-hidden rounded-[3px]">
+        {/* The demos are square (200x200 viewBox). The display is not, so the
+            demo is sized off height and centred, leaving side gutters — which
+            is exactly how a square readout would sit on a real screen. */}
         {Active && (
           <div
             key={DEMOS[active].id}
-            className="absolute inset-[3%] animate-[fadeIn_600ms_ease-out]"
+            className="absolute inset-y-[3%] left-1/2 aspect-square -translate-x-1/2 animate-[fadeIn_600ms_ease-out]"
           >
             <Active />
           </div>
