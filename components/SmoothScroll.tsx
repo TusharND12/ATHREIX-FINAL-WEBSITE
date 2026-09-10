@@ -96,7 +96,10 @@ export function SmoothScroll() {
         tl.progress(self.progress)
         const root = document.documentElement.style
         root.setProperty('--sp', self.progress.toFixed(4))
-        root.setProperty('--accent', accentAt(self.progress))
+        const accent = accentAt(self.progress)
+        root.setProperty('--accent', accent)
+        // The screen glow reads the accent from here, not from CSS.
+        sceneState.accent = accent
         // Ask the demand-driven canvas for exactly one frame.
         invalidate()
       },

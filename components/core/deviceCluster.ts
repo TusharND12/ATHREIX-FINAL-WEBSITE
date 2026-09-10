@@ -44,6 +44,8 @@ export type DeviceCluster = {
   lineMaterial: THREE.LineBasicMaterial
   /** The display panel itself — dark, unlit, so the DOM demo sits on a void. */
   screenMaterial: THREE.MeshBasicMaterial
+  /** Additive accent wash over every screen. Makes the hardware look powered. */
+  glowMaterial: THREE.MeshBasicMaterial
   dispose: () => void
 }
 
@@ -74,14 +76,27 @@ function slab(w: number, h: number, d: number, r: number) {
 }
 
 /** Where each satellite device sits, as an angle around the laptop. */
-const ORBIT: Array<{ name: string; label: string; deg: number; r: number; z: number }> = [
-  { name: 'phone', label: 'Mobile', deg: 18, r: 2.75, z: -0.35 },
-  { name: 'watch', label: 'Wearable', deg: 68, r: 2.6, z: -0.8 },
-  { name: 'edge', label: 'Edge gateway', deg: 126, r: 2.7, z: -0.7 },
-  { name: 'tablet', label: 'Field tablet', deg: 172, r: 3.0, z: -0.3 },
-  { name: 'server', label: 'On-prem node', deg: 218, r: 2.85, z: -0.9 },
-  { name: 'sensor', label: 'Vision sensor', deg: 268, r: 2.5, z: -0.75 },
-  { name: 'router', label: 'Network', deg: 318, r: 2.7, z: -0.6 },
+const ORBIT: Array<{
+  name: string
+  label: string
+  deg: number
+  r: number
+  z: number
+  /** Per-device scale. Depth hierarchy — not everything is a lead object. */
+  s: number
+  /** Slight yaw, so nothing sits perfectly parallel to the picture plane. */
+  yaw: number
+}> = [
+  // Foreground pair, flanking the laptop, largest and closest.
+  { name: 'phone', label: 'Mobile', deg: 24, r: 2.35, z: 0.55, s: 1.05, yaw: -0.22 },
+  { name: 'tablet', label: 'Field tablet', deg: 163, r: 2.5, z: 0.3, s: 1.0, yaw: 0.26 },
+  // Mid ring.
+  { name: 'server', label: 'On-prem node', deg: 232, r: 2.45, z: -0.45, s: 0.9, yaw: 0.18 },
+  { name: 'watch', label: 'Wearable', deg: 78, r: 3.0, z: -0.9, s: 0.82, yaw: -0.3 },
+  // Pushed back and small: present, but clearly supporting.
+  { name: 'router', label: 'Network', deg: 320, r: 2.25, z: -1.5, s: 0.78, yaw: -0.14 },
+  { name: 'edge', label: 'Edge gateway', deg: 199, r: 3.25, z: -1.35, s: 0.74, yaw: 0.34 },
+  { name: 'sensor', label: 'Vision sensor', deg: 291, r: 3.15, z: -1.2, s: 0.7, yaw: 0.1 },
 ]
 
 const RING_COLORS = [
@@ -113,7 +128,15 @@ export function buildDeviceCluster(): DeviceCluster {
     opacity: 1,
     toneMapped: false,
   })
-  disposables.push(solidMaterial, lineMaterial, screenMaterial)
+  const glowMaterial = new THREE.MeshBasicMaterial({
+    color: new THREE.Color('#ff5a5f'),
+    transparent: true,
+    opacity: 0,
+    toneMapped: false,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  })
+  disposables.push(solidMaterial, lineMaterial, screenMaterial, glowMaterial)
 
   const group = new THREE.Group()
   group.name = 'athreix-devices'
@@ -264,7 +287,7 @@ export function buildDeviceCluster(): DeviceCluster {
       }
     }
 
-    addPart(o.name, o.label, geos, pos, (node) => {
+    const node = addPart(o.name, o.label, geos, pos, (n) => {
       if (!screen) return
       const g =
         o.name === 'sensor'
@@ -272,9 +295,21 @@ export function buildDeviceCluster(): DeviceCluster {
           : new THREE.PlaneGeometry(screen.w, screen.h)
       const mesh = new THREE.Mesh(g, screenMaterial)
       mesh.position.z = screen.z
-      node.add(mesh)
-      disposables.push(g)
+      n.add(mesh)
+
+      // Accent wash, a hair proud of the panel so it reads as emitted light.
+      const glowGeo =
+        o.name === 'sensor'
+          ? new THREE.CircleGeometry(screen.w / 2, 20)
+          : new THREE.PlaneGeometry(screen.w, screen.h)
+      const glow = new THREE.Mesh(glowGeo, glowMaterial)
+      glow.position.z = screen.z + 0.004
+      n.add(glow)
+
+      disposables.push(g, glowGeo)
     })
+    node.scale.setScalar(o.s)
+    node.rotation.y = o.yaw
   }
 
   // --- the act ring ---------------------------------------------------------
@@ -343,6 +378,7 @@ export function buildDeviceCluster(): DeviceCluster {
     solidMaterial,
     lineMaterial,
     screenMaterial,
+    glowMaterial,
     dispose: () => disposables.forEach((d) => d.dispose()),
   }
 }

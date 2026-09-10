@@ -89,6 +89,13 @@ export function Rig() {
     root.style.setProperty('--fg', `#${cssFg.getHexString()}`)
     root.style.setProperty('--muted', `#${cssMuted.getHexString()}`)
 
+    // Screens pick up the section accent, so the hardware looks powered rather
+    // than like unlit plastic. Squared falloff on the lid keeps them dark until
+    // the machine is actually open.
+    const lidLit = Math.max(0, Math.min(1, (s.lid - 0.62) / 0.33))
+    c.glowMaterial.color.set(s.accent)
+    c.glowMaterial.opacity = 0.085 * lidLit * (1 - s.blueprint) * (1 - t * 0.75)
+
     // --- act ring: light the arc for the act you are actually in ------------
     for (let i = 0; i < c.ringSegments.length; i++) {
       const seg = c.ringSegments[i]
@@ -135,14 +142,16 @@ export function Rig() {
 
   return (
     <>
-      <ambientLight intensity={0.5} />
-      {/* Key */}
-      <directionalLight position={[-5, 4, 7]} intensity={2.1} color="#ffd9c0" />
-      {/* Rim from behind — the warm edge highlight that makes flat-shaded
-          bodies read as solid objects rather than silhouettes. */}
-      <directionalLight position={[4, 2, -6]} intensity={2.6} color="#ffb37a" />
-      {/* Cool fill, keeps the shadow side off flat black. */}
-      <directionalLight position={[6, -3, 2]} intensity={0.7} color="#8fb6ff" />
+      {/* Low ambient: the bodies are dark on purpose, so that edge highlights
+          read as highlights instead of being lost in an evenly lit grey. */}
+      <ambientLight intensity={0.26} />
+      {/* Key — cool and sharp. The old rig ran two warm lights at 2.1 and 2.6,
+          which is what made every device look dusty brown. */}
+      <directionalLight position={[-4.5, 5, 6]} intensity={2.4} color="#eaf0ff" />
+      {/* Warm rim from behind, dialled well back — an edge accent, not a wash. */}
+      <directionalLight position={[5, 1.5, -5]} intensity={1.1} color="#ffb37a" />
+      {/* Cool underfill so the shadow side has shape rather than going black. */}
+      <directionalLight position={[3, -4, 2]} intensity={0.5} color="#7fa8ff" />
     </>
   )
 }

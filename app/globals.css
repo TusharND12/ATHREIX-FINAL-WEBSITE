@@ -64,7 +64,7 @@ body {
   z-index: 1;
   background: radial-gradient(
     58% 58% at 62% 46%,
-    color-mix(in srgb, var(--accent) 16%, transparent) 0%,
+    color-mix(in srgb, var(--accent) 9%, transparent) 0%,
     transparent 68%
   );
   transition: background 400ms linear;

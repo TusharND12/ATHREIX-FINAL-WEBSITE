@@ -36,6 +36,10 @@ export type SceneState = {
    */
   lid: number
 
+  /** Current accent as a CSS string. Written by SmoothScroll, read by the
+   *  screen-glow material so the hardware picks up the section colour. */
+  accent: string
+
   /** Global scroll progress, mirrored here for the scrubber UI. */
   progress: number
 }
@@ -51,6 +55,7 @@ export const sceneState: SceneState = {
   rotY: -0.06,
   stage: 1,
   lid: 0,
+  accent: '#ff5a5f',
   progress: 0,
 }
 
@@ -59,6 +64,6 @@ export const EXPLODE_SPREAD = 2.4
 
 /** Palette endpoints for the two themes. */
 export const THEME = {
-  dark: { bg: '#0d0f12', fg: '#f2f0ec', muted: '#7c828c', solid: '#585e68', line: '#f2f0ec' },
+  dark: { bg: '#0d0f12', fg: '#f2f0ec', muted: '#7c828c', solid: '#3c4149', line: '#f2f0ec' },
   light: { bg: '#e8e6e1', fg: '#1a1c20', muted: '#6b7079', solid: '#c9c5bc', line: '#33363c' },
 } as const
