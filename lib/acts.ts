@@ -9,6 +9,13 @@
 
 export type Act = {
   id: string
+  /**
+   * Height of the act, in viewport heights.
+   *
+   * The copy is pinned with position:sticky, which means it only holds still
+   * for (vh - 100). Any act with copy wants 140+ so the text has time to be
+   * read; below about 130 it is sliding the whole way past.
+   */
   vh: number
   /** Accent colour for this act (headings, aperture ring, demo). */
   accent: string
@@ -17,6 +24,8 @@ export type Act = {
   body?: string
   /** Shows the DOM demo layer registered to the 3D aperture. */
   stage?: boolean
+  /** Renders a call to action under the copy. */
+  cta?: { label: string; href: string }
 }
 
 export const ACTS: Act[] = [
@@ -55,7 +64,7 @@ export const ACTS: Act[] = [
   },
   {
     id: 'cap-retrieval',
-    vh: 110,
+    vh: 150,
     accent: '#2ee6a8',
     eyebrow: 'Capability',
     title: 'Retrieval that\nactually retrieves.',
@@ -64,7 +73,7 @@ export const ACTS: Act[] = [
   },
   {
     id: 'cap-inference',
-    vh: 110,
+    vh: 150,
     accent: '#4d9fff',
     eyebrow: 'Capability',
     title: 'Inference\nunder budget.',
@@ -73,7 +82,7 @@ export const ACTS: Act[] = [
   },
   {
     id: 'cap-guardrails',
-    vh: 110,
+    vh: 150,
     accent: '#22d3ee',
     eyebrow: 'Capability',
     title: 'Guardrails\nyou can audit.',
@@ -90,10 +99,11 @@ export const ACTS: Act[] = [
   },
   {
     id: 'outro',
-    vh: 100,
+    vh: 140,
     accent: '#ff5a5f',
     title: 'Build it with us.',
     body: 'Tell us what you are trying to ship. We will tell you what it actually takes.',
+    cta: { label: 'Start a project', href: 'mailto:tech@athreix.com' },
   },
 ]
 

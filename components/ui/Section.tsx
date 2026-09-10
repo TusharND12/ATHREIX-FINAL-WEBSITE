@@ -11,10 +11,10 @@ gsap.registerPlugin(ScrollTrigger)
  * One act's DOM. The text column pins for the whole act while the 3D
  * choreography for that act plays out behind it, then hands off to the next.
  *
- * The copy is real text in the DOM, not painted into the canvas — the page
- * must read correctly with JS animation off.
+ * The copy is real text in the DOM, not painted into the canvas — the page must
+ * read correctly with JS animation off.
  */
-export function Section({ act }: { act: Act }) {
+export function Section({ act, index }: { act: Act; index: number }) {
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -24,26 +24,39 @@ export function Section({ act }: { act: Act }) {
     if (!panel) return
 
     const ctx = gsap.context(() => {
-      // Fade the text in at the top of the act and out at the bottom, so
-      // consecutive pinned panels cross-dissolve instead of hard-cutting.
+      const lines = el.querySelectorAll('[data-line]')
+
+      // Headline lines rise out of their masks. At this type size a rise reads
+      // as intent; a plain fade reads as a page that has not finished loading.
+      if (lines.length) {
+        gsap.fromTo(
+          lines,
+          { yPercent: 108 },
+          {
+            yPercent: 0,
+            ease: 'expo.out',
+            duration: 1.1,
+            stagger: 0.075,
+            scrollTrigger: { trigger: el, start: 'top 68%' },
+          },
+        )
+      }
+
       gsap.fromTo(
         panel,
-        { autoAlpha: 0, y: 24 },
+        { autoAlpha: 0 },
         {
           autoAlpha: 1,
-          y: 0,
           ease: 'none',
-          scrollTrigger: { trigger: el, start: 'top 75%', end: 'top 25%', scrub: true },
+          scrollTrigger: { trigger: el, start: 'top 78%', end: 'top 30%', scrub: true },
         },
       )
       gsap.to(panel, {
         autoAlpha: 0,
-        y: -24,
         ease: 'none',
-        scrollTrigger: { trigger: el, start: 'bottom 75%', end: 'bottom 25%', scrub: true },
+        scrollTrigger: { trigger: el, start: 'bottom 72%', end: 'bottom 26%', scrub: true },
       })
 
-      // Progress bar under the copy — how far through this act you are.
       const bar = el.querySelector('[data-bar]')
       if (bar) {
         gsap.fromTo(
@@ -62,6 +75,7 @@ export function Section({ act }: { act: Act }) {
   }, [])
 
   const hasCopy = Boolean(act.title || act.body)
+  const lines = act.title?.split('\n') ?? []
 
   return (
     <section
@@ -75,36 +89,61 @@ export function Section({ act }: { act: Act }) {
         {hasCopy && (
           <div
             data-panel
-            className="relative z-10 w-full max-w-[26rem] px-6 md:px-14 lg:max-w-[30rem]"
+            className="relative z-10 w-full max-w-[27rem] px-6 md:px-12 lg:max-w-[33rem]"
           >
-            {act.eyebrow && (
-              <p
-                className="mb-4 font-mono text-[11px] uppercase tracking-[0.22em]"
-                style={{ color: 'var(--accent)' }}
-              >
-                {act.eyebrow}
-              </p>
-            )}
-            {act.title && (
-              <h2
-                className="whitespace-pre-line text-[clamp(2rem,4.4vw,3.4rem)] font-semibold leading-[1.06] tracking-[-0.02em]"
-                style={{ color: act.eyebrow ? 'var(--accent)' : 'var(--fg)' }}
-              >
-                {act.title}
+            <div className="mb-5 flex items-center gap-3">
+              <span
+                className="h-px w-8"
+                style={{ background: 'var(--accent)' }}
+                aria-hidden="true"
+              />
+              <span className="label" style={{ color: 'var(--accent)' }}>
+                {act.eyebrow ?? String(index + 1).padStart(2, '0')}
+              </span>
+            </div>
+
+            {lines.length > 0 && (
+              <h2 className="text-[clamp(2.2rem,5vw,4rem)] font-semibold leading-[1.02] tracking-[-0.035em]">
+                {lines.map((line, i) => (
+                  <span key={i} className="line-mask">
+                    <span
+                      data-line
+                      className="line-inner"
+                      style={{ color: act.eyebrow ? 'var(--accent)' : 'var(--fg)' }}
+                    >
+                      {line}
+                    </span>
+                  </span>
+                ))}
               </h2>
             )}
+
             {act.body && (
               <p
-                className="mt-5 max-w-[34ch] text-[15px] leading-relaxed"
+                className="mt-6 max-w-[38ch] text-[15px] leading-[1.65]"
                 style={{ color: 'var(--muted)' }}
               >
                 {act.body}
               </p>
             )}
+
+            {act.cta && (
+              <a
+                href={act.cta.href}
+                className="panel mt-8 inline-flex items-center gap-2.5 px-5 py-3 text-[14px] font-medium transition-transform hover:-translate-y-0.5"
+              >
+                {act.cta.label}
+                <span aria-hidden="true" style={{ color: 'var(--accent)' }}>
+                  &rarr;
+                </span>
+              </a>
+            )}
+
             <div
               data-bar
-              className="mt-8 h-px w-40 origin-left"
+              className="mt-9 h-px w-44 origin-left"
               style={{ background: 'var(--accent)' }}
+              aria-hidden="true"
             />
           </div>
         )}

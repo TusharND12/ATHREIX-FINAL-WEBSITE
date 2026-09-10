@@ -1,20 +1,18 @@
 @import "tailwindcss";
 
 /*
- * Theme tokens.
+ * DESIGN TOKENS
  *
- * These four are written from JS every frame — --bg/--fg/--muted by Rig (lerped
- * from the scroll-driven theme value) and --accent by SmoothScroll. The values
- * here are only the pre-hydration defaults, so the first paint is not white.
- * Do not set them anywhere else.
+ * --bg / --fg / --muted are written from JS every frame by Rig, lerped from the
+ * scroll-driven theme value; --accent and --sp are written by SmoothScroll. The
+ * values here are only pre-hydration defaults so the first paint is not white.
+ * Do not set those five anywhere else.
  */
 :root {
   --bg: #0d0f12;
   --fg: #f2f0ec;
   --muted: #7c828c;
   --accent: #ff5a5f;
-
-  /* Scroll progress, 0..1 */
   --sp: 0;
 
   /* Aperture registration, written by Rig each frame */
@@ -22,6 +20,14 @@
   --ap-y: 50vh;
   --ap-r: 0px;
   --stage-in: 0;
+
+  /* Surfaces. Derived from --fg so they invert with the theme for free. */
+  --hairline: color-mix(in srgb, var(--fg) 14%, transparent);
+  --hairline-strong: color-mix(in srgb, var(--fg) 28%, transparent);
+  --panel: color-mix(in srgb, var(--bg) 72%, transparent);
+
+  --font-sans: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+  --font-code: var(--font-mono), ui-monospace, SFMono-Regular, monospace;
 }
 
 html {
@@ -33,8 +39,106 @@ html {
 body {
   background: var(--bg);
   color: var(--fg);
-  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-family: var(--font-sans);
   overflow-x: hidden;
+}
+
+/* ---------------------------------------------------------------------------
+ * ATMOSPHERE
+ *
+ * Three stacked full-screen layers that sit above the canvas and below the UI.
+ * None of them are decoration for its own sake: the bloom gives the core a
+ * light source to sit in, the vignette pulls focus to the centre, and the grain
+ * stops large flat areas from banding on gradients.
+ * ------------------------------------------------------------------------- */
+
+.fx {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* Accent-tinted bloom behind the core. Follows the section colour. */
+.fx-bloom {
+  z-index: 1;
+  background: radial-gradient(
+    58% 58% at 62% 46%,
+    color-mix(in srgb, var(--accent) 16%, transparent) 0%,
+    transparent 68%
+  );
+  transition: background 400ms linear;
+}
+
+.fx-vignette {
+  z-index: 2;
+  background: radial-gradient(120% 90% at 50% 45%, transparent 42%, var(--bg) 100%);
+  opacity: 0.85;
+}
+
+/* Film grain. SVG turbulence beats a bitmap here — no request, no cache, and it
+   scales to any DPR without going soft. */
+.fx-grain {
+  z-index: 3;
+  opacity: 0.16;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='140' height='140' filter='url(%23n)' opacity='0.55'/></svg>");
+}
+
+/* ---------------------------------------------------------------------------
+ * CHROME
+ * ------------------------------------------------------------------------- */
+
+/* Glass panel. The instrument-surface look: hairline edge, blurred ground,
+   never a hard filled box. */
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--hairline);
+  border-radius: 10px;
+  backdrop-filter: blur(14px) saturate(120%);
+  -webkit-backdrop-filter: blur(14px) saturate(120%);
+}
+
+.label {
+  font-family: var(--font-code);
+  font-size: 10px;
+  line-height: 1;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.readout {
+  font-family: var(--font-code);
+  font-variant-numeric: tabular-nums;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+/* Corner brackets — an L drawn with two borders, mirrored per corner. Frames
+   the viewport as a viewfinder without boxing the content in. */
+.bracket {
+  position: fixed;
+  width: 26px;
+  height: 26px;
+  border-color: var(--hairline-strong);
+  border-style: solid;
+  border-width: 0;
+  pointer-events: none;
+  z-index: 30;
+}
+.bracket-tl { top: 20px; left: 20px; border-top-width: 1px; border-left-width: 1px; }
+.bracket-tr { top: 20px; right: 20px; border-top-width: 1px; border-right-width: 1px; }
+.bracket-bl { bottom: 20px; left: 20px; border-bottom-width: 1px; border-left-width: 1px; }
+.bracket-br { bottom: 20px; right: 20px; border-bottom-width: 1px; border-right-width: 1px; }
+
+/* Headline reveal. Each line sits in an overflow-hidden mask and rises into it,
+   which reads far better than a plain fade at this type size. */
+.line-mask {
+  display: block;
+  overflow: hidden;
+}
+.line-inner {
+  display: block;
+  will-change: transform;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -45,4 +149,5 @@ body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+  .fx-grain { display: none; }
 }
