@@ -27,6 +27,15 @@ export type SceneState = {
    * the stage is a flat DOM circle and cannot follow the ring into perspective.
    */
   stage: number
+  /**
+   * Laptop lid: 0 = shut, 1 = open.
+   *
+   * Not scroll-driven. The machine opens once on load, as an intro, and stays
+   * open — tying it to scroll would mean it shuts again every time someone
+   * scrolled back to the top.
+   */
+  lid: number
+
   /** Global scroll progress, mirrored here for the scrubber UI. */
   progress: number
 }
@@ -41,6 +50,7 @@ export const sceneState: SceneState = {
   rotX: -0.07,
   rotY: -0.06,
   stage: 1,
+  lid: 0,
   progress: 0,
 }
 

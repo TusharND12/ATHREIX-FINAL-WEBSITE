@@ -57,6 +57,10 @@ export function Rig() {
 
     c.group.rotation.set(s.rotX, s.rotY, 0)
 
+    // The lid. 0.97 rather than a full right angle so it rests on the chassis
+    // when shut instead of intersecting it.
+    c.lid.rotation.x = (1 - s.lid) * (Math.PI / 2) * 0.97
+
     for (const p of c.parts) {
       p.node.position.copy(p.base).addScaledVector(p.dir, s.explode * EXPLODE_SPREAD)
     }
@@ -123,7 +127,10 @@ export function Rig() {
     root.style.setProperty('--st-y', `${cy.toFixed(1)}px`)
     root.style.setProperty('--st-w', `${(hw * 2).toFixed(1)}px`)
     root.style.setProperty('--st-h', `${(hh * 2).toFixed(1)}px`)
-    root.style.setProperty('--stage-in', s.stage.toFixed(3))
+    // Gate the demo on the lid. Without this the screen readout renders on a
+    // shut laptop during the intro, floating in front of the closed chassis.
+    const lidGate = Math.max(0, Math.min(1, (s.lid - 0.62) / 0.33))
+    root.style.setProperty('--stage-in', (s.stage * lidGate * lidGate).toFixed(3))
   })
 
   return (

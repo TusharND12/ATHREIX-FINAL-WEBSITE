@@ -36,6 +36,8 @@ export type DeviceCluster = {
   ringSegments: RingSegment[]
   /** Centre of the laptop display, in model space. */
   screenAnchor: THREE.Object3D
+  /** The lid. Pivots at the hinge; rotation.x is driven by sceneState.lid. */
+  lid: THREE.Group
   /** Half extents of the display, in world units. */
   screenHalf: { w: number; h: number }
   solidMaterial: THREE.MeshStandardMaterial
@@ -47,6 +49,10 @@ export type DeviceCluster = {
 
 const SCREEN_W = 2.5
 const SCREEN_H = 1.56
+
+/** Hinge position in the laptop's local space — the lid's pivot. */
+const HINGE_Y = -0.83
+const HINGE_Z = -0.02
 
 /** Rounded slab — the shared language for every screen-shaped device here. */
 function slab(w: number, h: number, d: number, r: number) {
@@ -137,36 +143,51 @@ export function buildDeviceCluster(): DeviceCluster {
     return node
   }
 
-  // --- laptop: base, hinge, display -----------------------------------------
+  // --- laptop: chassis, hinge, and a lid that opens --------------------------
+  // The lid is its own group pivoted at the hinge so it can rotate: everything
+  // riding on it (bezel, display, and the stage anchor the DOM demo registers
+  // to) is positioned relative to the hinge, not to the chassis.
   const screenAnchor = new THREE.Object3D()
+  const lid = new THREE.Group()
   {
-    const base = slab(2.72, 1.9, 0.11, 0.09)
-    base.rotateX(-Math.PI / 2)
-    base.translate(0, -0.86, 0.82)
+    const chassis = slab(2.72, 1.9, 0.11, 0.09)
+    chassis.rotateX(-Math.PI / 2)
+    chassis.translate(0, -0.86, 0.82)
 
     const deck = slab(2.2, 1.3, 0.03, 0.04)
     deck.rotateX(-Math.PI / 2)
     deck.translate(0, -0.79, 0.84)
 
-    const bezel = slab(SCREEN_W + 0.16, SCREEN_H + 0.16, 0.09, 0.07)
-    bezel.translate(0, 0, -0.06)
-
     const hinge = new THREE.CylinderGeometry(0.055, 0.055, 2.5, 12)
     hinge.rotateZ(Math.PI / 2)
-    hinge.translate(0, -0.83, -0.02)
+    hinge.translate(0, HINGE_Y, HINGE_Z)
 
-    const node = addPart('laptop', 'Workstation', [base, deck, bezel, hinge], new THREE.Vector3(0, 0.18, 0))
+    const node = addPart('laptop', 'Workstation', [chassis, deck, hinge], new THREE.Vector3(0, 0.18, 0))
 
-    // The display panel. Unlit: it is a void the DOM demo sits on, not a
-    // surface, and lighting it would wash the demo out.
+    lid.name = 'lid'
+    lid.position.set(0, HINGE_Y, HINGE_Z)
+
+    // Offsets are hinge-relative: at lid rotation 0 these land exactly where
+    // the display sat when it was welded to the chassis.
+    const bezel = slab(SCREEN_W + 0.16, SCREEN_H + 0.16, 0.09, 0.07)
+    bezel.translate(0, -HINGE_Y, -0.06 - HINGE_Z)
+    lid.add(new THREE.Mesh(bezel, solidMaterial))
+    const bezelEdges = new THREE.EdgesGeometry(bezel, 28)
+    lid.add(new THREE.LineSegments(bezelEdges, lineMaterial))
+    disposables.push(bezel, bezelEdges)
+
+    // The display. Unlit: it is a void the DOM demo sits on, not a surface,
+    // and lighting it would wash the demo out.
     const panel = new THREE.PlaneGeometry(SCREEN_W, SCREEN_H)
     const panelMesh = new THREE.Mesh(panel, screenMaterial)
-    panelMesh.position.set(0, 0, 0)
-    node.add(panelMesh)
+    panelMesh.position.set(0, -HINGE_Y, -HINGE_Z)
+    lid.add(panelMesh)
     disposables.push(panel)
 
-    screenAnchor.position.set(0, 0, 0.001)
-    node.add(screenAnchor)
+    screenAnchor.position.set(0, -HINGE_Y, -HINGE_Z + 0.001)
+    lid.add(screenAnchor)
+
+    node.add(lid)
   }
 
   // --- satellites -----------------------------------------------------------
@@ -317,6 +338,7 @@ export function buildDeviceCluster(): DeviceCluster {
     parts,
     ringSegments,
     screenAnchor,
+    lid,
     screenHalf: { w: SCREEN_W / 2, h: SCREEN_H / 2 },
     solidMaterial,
     lineMaterial,

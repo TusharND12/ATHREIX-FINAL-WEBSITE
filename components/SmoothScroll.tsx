@@ -72,6 +72,16 @@ export function SmoothScroll() {
       })
     }
 
+    // Intro: the machine opens itself once, on load. Deliberately outside the
+    // scroll timeline — tying it to scroll would shut the lid again every time
+    // someone scrolled back to the top, which reads as a bug rather than a beat.
+    const intro = gsap.fromTo(
+      sceneState,
+      { lid: 0 },
+      { lid: 1, duration: 1.9, delay: 0.55, ease: 'power3.inOut' },
+    )
+    cleanups.push(() => intro.kill())
+
     const tl = buildTimeline()
 
     const st = ScrollTrigger.create({
