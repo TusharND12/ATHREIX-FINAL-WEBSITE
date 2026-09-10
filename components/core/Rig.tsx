@@ -5,6 +5,7 @@ import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { buildPlaceholderCore, type CoreModel } from './buildPlaceholderCore'
 import { sceneState, EXPLODE_SPREAD, THEME } from './sceneState'
+import { ACTS, ACT_RANGE } from '@/lib/acts'
 
 const tmpVec = new THREE.Vector3()
 const tmpEdge = new THREE.Vector3()
@@ -96,6 +97,31 @@ export function Rig() {
     root.style.setProperty('--bg', `#${cssBg.getHexString()}`)
     root.style.setProperty('--fg', `#${cssFg.getHexString()}`)
     root.style.setProperty('--muted', `#${cssMuted.getHexString()}`)
+
+    // --- aperture ring: light the arc for the act you are actually in ------
+    // Segment i belongs to act i, so the highlight is driven by that act's real
+    // progress range rather than an even slice. Acts differ in length, and an
+    // even slice would drift out of sync with the headings by the halfway mark.
+    for (let i = 0; i < core.ringSegments.length; i++) {
+      const seg = core.ringSegments[i]
+      const act = ACTS[i]
+      let peak = 0
+
+      if (act) {
+        const { start, end } = ACT_RANGE[act.id]
+        const centre = (start + end) / 2
+        // Falloff reaches a little past the act's own bounds so neighbouring
+        // arcs overlap and the sweep reads as continuous.
+        const reach = ((end - start) / 2) * 1.9
+        peak = Math.max(0, 1 - Math.abs(s.progress - centre) / reach)
+      }
+
+      // Solid colour has no place in line-art mode, so the whole ring fades out
+      // with the blueprint crossfade.
+      const visible = 1 - s.blueprint
+      seg.core.opacity = (0.09 + 0.91 * peak) * visible
+      seg.halo.opacity = 0.5 * peak * peak * visible
+    }
 
     // --- register the DOM aperture stage to the projected 3D ring -----------
     // Project the aperture centre and one edge point into screen space, and

@@ -5,9 +5,13 @@ import { ACTS, ACT_RANGE } from '@/lib/acts'
 import { sceneState } from '@/components/core/sceneState'
 
 /**
- * Bottom-left slide counter. Deliberately large and quiet — it gives the page a
- * sense of place ("four of ten") that a progress bar alone does not, and it is
- * the one piece of chrome that stays legible on a phone.
+ * Slide counter, centred under the object. Deliberately large and quiet — it
+ * gives the page a sense of place ("four of ten") that a progress bar alone
+ * does not, and it is the one piece of chrome that stays legible on a phone.
+ *
+ * Centred rather than bottom-left on purpose: the copy column is left-aligned
+ * and, while a section's sticky panel is still rising into place, a bottom-left
+ * counter sits right on top of the body text.
  */
 export function ActCounter() {
   const numRef = useRef<HTMLSpanElement>(null)
@@ -37,7 +41,10 @@ export function ActCounter() {
   }, [])
 
   return (
-    <div className="fixed bottom-6 left-6 z-40 flex items-end gap-3 md:left-12" aria-hidden="true">
+    <div
+      className="fixed bottom-6 left-1/2 z-40 flex -translate-x-1/2 items-end gap-3"
+      aria-hidden="true"
+    >
       <span
         ref={numRef}
         className="font-[family-name:var(--font-code)] text-[34px] leading-none tracking-[-0.04em]"

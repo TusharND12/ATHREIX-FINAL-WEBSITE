@@ -27,9 +27,18 @@ export type CorePart = {
   dir: THREE.Vector3
 }
 
+/** One coloured arc on the aperture ring. */
+export type RingSegment = {
+  /** The bright arc itself. */
+  core: THREE.MeshBasicMaterial
+  /** A fatter, additive copy sitting behind it, faking a bloom. */
+  halo: THREE.MeshBasicMaterial
+}
+
 export type CoreModel = {
   group: THREE.Group
   parts: CorePart[]
+  ringSegments: RingSegment[]
   /** Invisible marker at the front face, used to register the DOM stage. */
   apertureAnchor: THREE.Object3D
   apertureRadius: number
@@ -61,6 +70,29 @@ const PART_SPECS: Spec[] = [
 
 const APERTURE_R = 1.6
 
+/**
+ * One arc per act, in page order, using each act's accent.
+ *
+ * This is why the ring is worth having: it is not decoration, it is the page's
+ * own table of contents wrapped around the lens. The lit arc tells you where
+ * you are, and the colour matches the heading you are reading.
+ */
+const RING_COLORS = [
+  '#ff5a5f', // hero
+  '#ff5a5f', // orbit
+  '#ff8f3f', // explode
+  '#ff8f3f', // blueprint
+  '#2ee6a8', // enter
+  '#2ee6a8', // cap-retrieval
+  '#4d9fff', // cap-inference
+  '#22d3ee', // cap-guardrails
+  '#b6f34a', // modular
+  '#ff5a5f', // outro
+]
+
+/** Gap between arcs, in radians. Enough to read as separate segments. */
+const SEG_GAP = 0.05
+
 export function buildPlaceholderCore(): CoreModel {
   const disposables: Array<{ dispose: () => void }> = []
 
@@ -83,6 +115,7 @@ export function buildPlaceholderCore(): CoreModel {
   group.name = 'athreix-core'
 
   const parts: CorePart[] = []
+  const ringSegments: RingSegment[] = []
 
   // --- the barrel stack -----------------------------------------------------
   for (const spec of PART_SPECS) {
@@ -139,6 +172,48 @@ export function buildPlaceholderCore(): CoreModel {
       disposables.push(g, edges)
     }
 
+    // --- the coloured segment ring ----------------------------------------
+    const segCount = RING_COLORS.length
+    const segArc = (Math.PI * 2) / segCount - SEG_GAP
+
+    for (let i = 0; i < segCount; i++) {
+      const color = new THREE.Color(RING_COLORS[i])
+
+      // toneMapped:false keeps these at their literal hex value. Without it the
+      // renderer's tone curve mutes them into the grey of the body.
+      const coreMat = new THREE.MeshBasicMaterial({
+        color,
+        transparent: true,
+        opacity: 0.25,
+        toneMapped: false,
+      })
+      const haloMat = new THREE.MeshBasicMaterial({
+        color,
+        transparent: true,
+        opacity: 0,
+        toneMapped: false,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      })
+
+      const coreGeo = new THREE.TorusGeometry(APERTURE_R + 0.17, 0.042, 8, 40, segArc)
+      const haloGeo = new THREE.TorusGeometry(APERTURE_R + 0.17, 0.15, 8, 40, segArc)
+
+      const rot = (i / segCount) * Math.PI * 2 + SEG_GAP / 2
+
+      const coreMesh = new THREE.Mesh(coreGeo, coreMat)
+      const haloMesh = new THREE.Mesh(haloGeo, haloMat)
+      coreMesh.rotation.z = rot
+      haloMesh.rotation.z = rot
+      // Slightly proud of the ring so the arcs never z-fight with the collar.
+      coreMesh.position.z = 0.02
+      haloMesh.position.z = 0.02
+
+      node.add(haloMesh, coreMesh)
+      ringSegments.push({ core: coreMat, halo: haloMat })
+      disposables.push(coreGeo, haloGeo, coreMat, haloMat)
+    }
+
     node.position.set(0, 0, 1.9)
     group.add(node)
 
@@ -169,6 +244,7 @@ export function buildPlaceholderCore(): CoreModel {
   return {
     group,
     parts,
+    ringSegments,
     apertureAnchor,
     apertureRadius: APERTURE_R,
     solidMaterial,
