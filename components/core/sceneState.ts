@@ -19,7 +19,13 @@ export type SceneState = {
   /** Model rotation, in radians. */
   rotX: number
   rotY: number
-  /** 0 = DOM aperture stage hidden, 1 = visible. */
+  /**
+   * 0 = DOM aperture stage hidden, 1 = visible.
+   *
+   * Starts at 1: the hero runs a live demo inside the lens from the first
+   * frame. It has to drop to 0 as soon as the core starts rotating, because
+   * the stage is a flat DOM circle and cannot follow the ring into perspective.
+   */
   stage: number
   /** Global scroll progress, mirrored here for the scrubber UI. */
   progress: number
@@ -34,7 +40,7 @@ export const sceneState: SceneState = {
   camZ: 11.4,
   rotX: -0.13,
   rotY: -0.24,
-  stage: 0,
+  stage: 1,
   progress: 0,
 }
 

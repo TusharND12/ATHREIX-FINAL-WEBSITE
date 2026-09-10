@@ -26,6 +26,8 @@ export type Act = {
   stage?: boolean
   /** Renders a call to action under the copy. */
   cta?: { label: string; href: string }
+  /** Positioning lockup above the headline. Letters reveal on load. */
+  badge?: string
 }
 
 export const ACTS: Act[] = [
@@ -33,6 +35,7 @@ export const ACTS: Act[] = [
     id: 'hero',
     vh: 120,
     accent: '#ff5a5f',
+    badge: 'ATHREIX — AI-NATIVE SYSTEMS',
     title: 'Intelligence,\nengineered.',
     body: 'Athreix builds AI systems that hold up in production — not demos that fall over in week two.',
   },

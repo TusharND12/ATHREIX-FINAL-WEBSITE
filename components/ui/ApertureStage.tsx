@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { ACT_RANGE } from '@/lib/acts'
 import { sceneState } from '@/components/core/sceneState'
+import { HeroDemo } from './demos/HeroDemo'
 import { RetrievalDemo } from './demos/RetrievalDemo'
 import { InferenceDemo } from './demos/InferenceDemo'
 import { GuardrailsDemo } from './demos/GuardrailsDemo'
@@ -19,6 +20,7 @@ import { GuardrailsDemo } from './demos/GuardrailsDemo'
  * of them animating off-screen forever.
  */
 const DEMOS = [
+  { id: 'hero', Component: HeroDemo },
   { id: 'cap-retrieval', Component: RetrievalDemo },
   { id: 'cap-inference', Component: InferenceDemo },
   { id: 'cap-guardrails', Component: GuardrailsDemo },

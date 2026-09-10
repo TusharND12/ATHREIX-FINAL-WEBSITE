@@ -44,6 +44,8 @@ export type CoreModel = {
   apertureRadius: number
   solidMaterial: THREE.MeshStandardMaterial
   lineMaterial: THREE.LineBasicMaterial
+  /** The dark disc behind the aperture. Gives the lens depth. */
+  interiorMaterial: THREE.MeshBasicMaterial
   dispose: () => void
 }
 
@@ -109,7 +111,13 @@ export function buildPlaceholderCore(): CoreModel {
     transparent: true,
     opacity: 0,
   })
-  disposables.push(solidMaterial, lineMaterial)
+  const interiorMaterial = new THREE.MeshBasicMaterial({
+    color: new THREE.Color('#08090d'),
+    transparent: true,
+    opacity: 1,
+    toneMapped: false,
+  })
+  disposables.push(solidMaterial, lineMaterial, interiorMaterial)
 
   const group = new THREE.Group()
   group.name = 'athreix-core'
@@ -170,6 +178,18 @@ export function buildPlaceholderCore(): CoreModel {
       const edges = new THREE.EdgesGeometry(g, 25)
       node.add(new THREE.LineSegments(edges, lineMaterial))
       disposables.push(g, edges)
+    }
+
+    // --- the dark lens interior --------------------------------------------
+    // Without this you look straight down the barrel at the lit face of the
+    // next cylinder, and the hero reads as a flat grey disc. Unlit on purpose:
+    // it is a void, not a surface, and lighting it defeats the point.
+    {
+      const discGeo = new THREE.CircleGeometry(APERTURE_R - 0.02, 64)
+      const mesh = new THREE.Mesh(discGeo, interiorMaterial)
+      mesh.position.z = -0.18
+      node.add(mesh)
+      disposables.push(discGeo)
     }
 
     // --- the coloured segment ring ----------------------------------------
@@ -249,6 +269,7 @@ export function buildPlaceholderCore(): CoreModel {
     apertureRadius: APERTURE_R,
     solidMaterial,
     lineMaterial,
+    interiorMaterial,
     dispose: () => disposables.forEach((d) => d.dispose()),
   }
 }

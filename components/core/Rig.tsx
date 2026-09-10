@@ -98,6 +98,14 @@ export function Rig() {
     root.style.setProperty('--fg', `#${cssFg.getHexString()}`)
     root.style.setProperty('--muted', `#${cssMuted.getHexString()}`)
 
+    // The void goes pale in the light theme, and disappears entirely in
+    // line-art mode where there is no solid surface to be inside of.
+    core.interiorMaterial.color.copy(
+      colA.set('#08090d').lerp(colB.set('#d9d6cf'), t),
+    )
+    core.interiorMaterial.opacity = 1 - s.blueprint
+    core.interiorMaterial.visible = s.blueprint < 0.995
+
     // --- aperture ring: light the arc for the act you are actually in ------
     // Segment i belongs to act i, so the highlight is driven by that act's real
     // progress range rather than an even slice. Acts differ in length, and an

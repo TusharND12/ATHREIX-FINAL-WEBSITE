@@ -25,7 +25,10 @@ export function buildTimeline() {
     )
 
   // --- ACT 1 — ORBIT: pull back and swing into a three-quarter view ---------
-  tl.to(s, { camZ: 13.2, camY: 1.4, duration: dur('orbit') }, at('orbit'))
+  // The hero demo has to go before the tilt does; a flat DOM circle cannot
+  // follow the aperture into perspective and the mismatch is obvious.
+  tl.to(s, { stage: 0, duration: dur('orbit') * 0.28 }, at('orbit'))
+    .to(s, { camZ: 13.2, camY: 1.4, duration: dur('orbit') }, at('orbit'))
     .to(s, { rotY: Math.PI * 0.42, rotX: -0.28, duration: dur('orbit') }, at('orbit'))
 
   // --- ACT 2 — EXPLODE: one scalar pulls every part apart -------------------

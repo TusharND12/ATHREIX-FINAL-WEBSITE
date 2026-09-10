@@ -24,6 +24,22 @@ export function Section({ act, index }: { act: Act; index: number }) {
     if (!panel) return
 
     const ctx = gsap.context(() => {
+      // The badge is the first thing on the page, so it leads: letters resolve
+      // in before the headline starts rising.
+      const chars = el.querySelectorAll('[data-char]')
+      if (chars.length) {
+        gsap.fromTo(
+          chars,
+          { opacity: 0, y: -6 },
+          { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out', stagger: 0.022, delay: 0.15 },
+        )
+        gsap.fromTo(
+          el.querySelector('[data-badge]'),
+          { width: 0 },
+          { width: 'auto', duration: 0.7, ease: 'power3.out' },
+        )
+      }
+
       const lines = el.querySelectorAll('[data-line]')
 
       // Headline lines rise out of their masks. At this type size a rise reads
@@ -37,6 +53,7 @@ export function Section({ act, index }: { act: Act; index: number }) {
             ease: 'expo.out',
             duration: 1.1,
             stagger: 0.075,
+            delay: act.badge ? 0.35 : 0,
             scrollTrigger: { trigger: el, start: 'top 68%' },
           },
         )
@@ -72,7 +89,7 @@ export function Section({ act, index }: { act: Act; index: number }) {
     }, el)
 
     return () => ctx.revert()
-  }, [])
+  }, [act.badge])
 
   const hasCopy = Boolean(act.title || act.body)
   const lines = act.title?.split('\n') ?? []
@@ -91,16 +108,46 @@ export function Section({ act, index }: { act: Act; index: number }) {
             data-panel
             className="relative z-10 w-full max-w-[27rem] px-6 md:px-12 lg:max-w-[33rem]"
           >
-            <div className="mb-5 flex items-center gap-3">
-              <span
-                className="h-px w-8"
-                style={{ background: 'var(--accent)' }}
-                aria-hidden="true"
-              />
-              <span className="label" style={{ color: 'var(--accent)' }}>
-                {act.eyebrow ?? String(index + 1).padStart(2, '0')}
-              </span>
-            </div>
+            {act.badge && (
+              <div
+                data-badge
+                className="panel mb-6 inline-flex items-center gap-2.5 overflow-hidden whitespace-nowrap px-3.5 py-2"
+              >
+                <span className="relative flex h-1.5 w-1.5 shrink-0">
+                  <span
+                    className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-70"
+                    style={{ background: 'var(--accent)' }}
+                  />
+                  <span
+                    className="relative inline-flex h-1.5 w-1.5 rounded-full"
+                    style={{ background: 'var(--accent)' }}
+                  />
+                </span>
+                <span className="label" style={{ color: 'var(--fg)' }}>
+                  {act.badge.split('').map((ch, i) => (
+                    <span key={i} data-char className="inline-block">
+                      {ch === ' ' ? '\u00A0' : ch}
+                    </span>
+                  ))}
+                </span>
+              </div>
+            )}
+
+            {/* The badge already carries positioning, so a numeric eyebrow
+                under it is redundant — and "ACT 01" in a hero reads as debug
+                text left in by accident. */}
+            {(act.eyebrow || !act.badge) && (
+              <div className="mb-5 flex items-center gap-3">
+                <span
+                  className="h-px w-8"
+                  style={{ background: 'var(--accent)' }}
+                  aria-hidden="true"
+                />
+                <span className="label" style={{ color: 'var(--accent)' }}>
+                  {act.eyebrow ?? String(index + 1).padStart(2, '0')}
+                </span>
+              </div>
+            )}
 
             {lines.length > 0 && (
               <h2 className="text-[clamp(2.2rem,5vw,4rem)] font-semibold leading-[1.02] tracking-[-0.035em]">
