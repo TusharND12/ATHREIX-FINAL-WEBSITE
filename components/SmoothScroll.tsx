@@ -72,13 +72,13 @@ export function SmoothScroll() {
       })
     }
 
-    // Intro: the machine opens itself once, on load. Deliberately outside the
-    // scroll timeline — tying it to scroll would shut the lid again every time
-    // someone scrolled back to the top, which reads as a bug rather than a beat.
+
+    // The entrance. Long and slow on purpose — it is the first thing anyone
+    // sees, and a field condensing out of nothing wants time to read.
     const intro = gsap.fromTo(
       sceneState,
-      { lid: 0 },
-      { lid: 1, duration: 1.9, delay: 0.55, ease: 'power3.inOut' },
+      { introT: 0 },
+      { introT: 1, duration: reduced ? 0.01 : 2.6, ease: 'power2.out' },
     )
     cleanups.push(() => intro.kill())
 
@@ -109,6 +109,21 @@ export function SmoothScroll() {
       st.kill()
       tl.kill()
     })
+
+    // Recompute trigger positions once the web fonts land.
+    //
+    // Headline reveals are one-shot fromTo tweens that set their hidden state
+    // immediately and only clear it when their trigger fires. Trigger offsets
+    // are measured at mount, but Space Grotesk arrives later and reflows every
+    // section — so some triggers end up pointing at the wrong scroll position,
+    // never fire, and their headline stays parked in its mask. (Seen live on
+    // the Guardrails act: eyebrow and body present, h2 invisible.)
+    if (typeof document !== 'undefined' && document.fonts) {
+      document.fonts.ready.then(() => ScrollTrigger.refresh())
+    }
+    const refreshOnLoad = () => ScrollTrigger.refresh()
+    window.addEventListener('load', refreshOnLoad)
+    cleanups.push(() => window.removeEventListener('load', refreshOnLoad))
 
     // Prime the first frame so the hero is posed correctly before any scroll.
     // The rAF is insurance for the case where the canvas root has not finished

@@ -9,10 +9,11 @@ const TICKS = 64
 /**
  * The instrument panel, bottom-right.
  *
- * It reads the same sceneState the 3D scene does, so the numbers are the actual
- * values driving the choreography — not a decorative animation that happens to
- * look busy. That is what makes it worth screen space: while building, it is
- * the fastest way to see whether a beat is landing on the section it belongs to.
+ * It reads the same sceneState the field does, so these are the actual morph
+ * weights driving the cloud — not a decorative animation that happens to look
+ * busy. Watching noise fall as cluster rises is watching the page's mechanism,
+ * and while building it is the fastest way to see whether a beat lands on the
+ * section it belongs to.
  *
  * Updates are written straight to the DOM from a rAF loop. Putting a 60Hz
  * counter in React state would re-render this subtree every frame for nothing.
@@ -53,7 +54,13 @@ export function Telemetry() {
       // Live channel meters, straight off the values the scene is using.
       const bars = barsRef.current
       if (bars) {
-        const vals = [sceneState.explode, sceneState.blueprint, sceneState.theme]
+        const vals = [
+          sceneState.wNoise,
+          sceneState.wCluster,
+          sceneState.wManifold,
+          sceneState.wGlyph,
+          sceneState.wStream,
+        ]
         for (let i = 0; i < vals.length; i++) {
           const el = bars.children[i]?.querySelector<HTMLElement>('[data-fill]')
           if (el) el.style.transform = `scaleX(${Math.min(1, Math.max(0, vals[i]))})`
@@ -79,8 +86,8 @@ export function Telemetry() {
       </div>
 
       {/* Channel meters — the three scalars that drive the whole page. */}
-      <div ref={barsRef} className="mb-3 space-y-1.5">
-        {['explode', 'blueprint', 'theme'].map((name) => (
+      <div ref={barsRef} className="mb-3 space-y-[5px]">
+        {['noise', 'cluster', 'manifold', 'glyph', 'stream'].map((name) => (
           <div key={name} className="flex items-center gap-2.5">
             <span className="readout w-[52px] shrink-0" style={{ color: 'var(--muted)' }}>
               {name}

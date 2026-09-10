@@ -1,6 +1,6 @@
 import { ACTS } from '@/lib/acts'
 import { Section } from '@/components/ui/Section'
-import { ApertureStage } from '@/components/ui/ApertureStage'
+import { CapabilityPanel } from '@/components/ui/CapabilityPanel'
 import { Atmosphere, CornerFrame } from '@/components/ui/Atmosphere'
 import { SiteHeader } from '@/components/ui/SiteHeader'
 import { Telemetry } from '@/components/ui/Telemetry'
@@ -13,8 +13,11 @@ export default function Home() {
           → copy (z10) → chrome (z40). */}
       <Atmosphere />
 
-      {/* The DOM layer registered to the 3D aperture. */}
-      <ApertureStage />
+      {/* Keeps the copy legible over the full-bleed point field. */}
+      <div className="scrim" aria-hidden="true" />
+
+      {/* Capability readouts, opposite the copy. */}
+      <CapabilityPanel />
 
       {/* The scroll track. Its total height is the sum of every act's `vh`, and
           it is the ScrollTrigger trigger for the master timeline. */}

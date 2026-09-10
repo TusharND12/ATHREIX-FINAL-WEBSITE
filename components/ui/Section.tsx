@@ -54,7 +54,12 @@ export function Section({ act, index }: { act: Act; index: number }) {
             duration: 1.1,
             stagger: 0.075,
             delay: act.badge ? 0.35 : 0,
-            scrollTrigger: { trigger: el, start: 'top 68%' },
+            // Fires early and only once. At 'top 68%' the window was narrow
+            // enough that a fast scroll or a post-font refresh could leave a
+            // headline parked in its mask with the eyebrow and body visible
+            // around it — seen on Guardrails, then again on the outro. `once`
+            // also stops a refresh re-arming a reveal that already played.
+            scrollTrigger: { trigger: el, start: 'top 92%', once: true },
           },
         )
       }

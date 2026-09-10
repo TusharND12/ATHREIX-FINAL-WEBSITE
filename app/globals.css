@@ -9,18 +9,14 @@
  * Do not set those five anywhere else.
  */
 :root {
-  --bg: #0d0f12;
+  --bg: #07080b;
   --fg: #f2f0ec;
   --muted: #7c828c;
-  --accent: #ff5a5f;
+  --accent: #7c8cff;
   --sp: 0;
 
-  /* Display registration, written by Rig each frame */
-  --st-x: 50vw;
-  --st-y: 50vh;
-  --st-w: 0px;
-  --st-h: 0px;
-  --stage-in: 0;
+  /* Capability panel visibility, written by Rig each frame */
+  --panel-in: 0;
 
   /* Surfaces. Derived from --fg so they invert with the theme for free. */
   --hairline: color-mix(in srgb, var(--fg) 14%, transparent);
@@ -157,4 +153,57 @@ body {
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
+}
+
+/*
+ * Text scrim.
+ *
+ * The point field is full-bleed and bright, which destroys copy legibility on
+ * its own. A soft gradient anchored to the reading column gives text ground to
+ * sit on without boxing it in. Sits between the canvas (z0) and the copy (z10).
+ */
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  background: linear-gradient(
+    100deg,
+    var(--bg) 0%,
+    color-mix(in srgb, var(--bg) 90%, transparent) 24%,
+    color-mix(in srgb, var(--bg) 52%, transparent) 44%,
+    transparent 68%
+  );
+}
+
+/* ---------------------------------------------------------------------------
+ * NARROW VIEWPORTS
+ *
+ * The desktop layout puts copy in a left column with the field to its right, so
+ * the scrim is a horizontal gradient. On a phone there is no "right" — the copy
+ * sits directly on top of the field — so the scrim has to become vertical or
+ * the text has no ground under it at all.
+ * ------------------------------------------------------------------------- */
+@media (max-width: 767px) {
+  .scrim {
+    background: linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--bg) 82%, transparent) 0%,
+      color-mix(in srgb, var(--bg) 62%, transparent) 34%,
+      color-mix(in srgb, var(--bg) 88%, transparent) 72%,
+      var(--bg) 100%
+    );
+  }
+
+  /* Corner brackets crowd a small screen; the frame reads as clutter there. */
+  .bracket { display: none; }
+
+  /* The bloom is sized for a wide canvas and washes a narrow one. */
+  .fx-bloom {
+    background: radial-gradient(
+      70% 42% at 50% 38%,
+      color-mix(in srgb, var(--accent) 11%, transparent) 0%,
+      transparent 70%
+    );
+  }
 }

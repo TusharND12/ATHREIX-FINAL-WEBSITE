@@ -1,69 +1,84 @@
 /**
  * The bridge between GSAP and Three.js.
  *
- * GSAP tweens this plain object. `useFrame` reads it and applies it to the
- * scene. React never re-renders as a result of scrolling — that is the whole
+ * GSAP tweens this plain object; `useFrame` reads it and pushes it into shader
+ * uniforms. React never re-renders as a result of scrolling — that is the whole
  * point. If you find yourself putting any of this in useState, stop.
  */
 export type SceneState = {
-  /** 0 = assembled, 1 = fully exploded. Drives every part at once. */
-  explode: number
-  /** 0 = solid flat-shaded, 1 = line-art blueprint. Crossfades the two meshes. */
-  blueprint: number
-  /** 0 = dark theme, 1 = light theme. Drives CSS vars *and* material colours. */
-  theme: number
+  /** Morph weights. These five are the heart of the whole page. */
+  wNoise: number
+  wCluster: number
+  wManifold: number
+  wGlyph: number
+  wStream: number
+
+  /** Per-point wander. Keeps a section you linger on from looking frozen. */
+  drift: number
+  /** Point size, in shader units. */
+  size: number
+  /** How much of the cloud takes the accent colour. */
+  accentMix: number
+  /** Cluster index to spotlight, or -1 for all. */
+  focus: number
+  /** Global fade. */
+  opacity: number
+
+  /** Whole-field orientation. */
+  spin: number
+  tilt: number
+
   /** Camera, in world units. */
-  camX: number
   camY: number
   camZ: number
-  /** Model rotation, in radians. */
-  rotX: number
-  rotY: number
-  /**
-   * 0 = DOM aperture stage hidden, 1 = visible.
-   *
-   * Starts at 1: the hero runs a live demo inside the lens from the first
-   * frame. It has to drop to 0 as soon as the core starts rotating, because
-   * the stage is a flat DOM circle and cannot follow the ring into perspective.
-   */
-  stage: number
-  /**
-   * Laptop lid: 0 = shut, 1 = open.
-   *
-   * Not scroll-driven. The machine opens once on load, as an intro, and stays
-   * open — tying it to scroll would mean it shuts again every time someone
-   * scrolled back to the top.
-   */
-  lid: number
 
-  /** Current accent as a CSS string. Written by SmoothScroll, read by the
-   *  screen-glow material so the hardware picks up the section colour. */
+  /** 0 = dark theme, 1 = light theme. Drives CSS vars *and* point colours. */
+  theme: number
+
+  /** 0 = capability panel hidden, 1 = visible. */
+  panel: number
+
+  /** Current accent as a CSS string. Written by SmoothScroll. */
   accent: string
 
-  /** Global scroll progress, mirrored here for the scrubber UI. */
+  /**
+   * Entrance, 0 -> 1. Not a loading screen: the field arrives unformed and
+   * condenses into the hero state, so the entrance is part of the world rather
+   * than a panel sitting on top of it.
+   *
+   * Applied by Rig as a decaying offset on top of whatever the scroll timeline
+   * says, so the two never fight over the same properties.
+   */
+  introT: number
+
+  /** Global scroll progress, mirrored for the chrome. */
   progress: number
 }
 
 export const sceneState: SceneState = {
-  explode: 0,
-  blueprint: 0,
-  theme: 0,
-  camX: 0,
+  wNoise: 1,
+  wCluster: 0,
+  wManifold: 0,
+  wGlyph: 0,
+  wStream: 0,
+  drift: 0.38,
+  size: 4.0,
+  accentMix: 0.55,
+  focus: -1,
+  opacity: 1,
+  spin: 0,
+  tilt: 0,
   camY: 0,
-  camZ: 13.9,
-  rotX: -0.07,
-  rotY: -0.06,
-  stage: 1,
-  lid: 0,
-  accent: '#ff5a5f',
+  camZ: 15.5,
+  theme: 0,
+  panel: 0,
+  accent: '#7c8cff',
+  introT: 0,
   progress: 0,
 }
 
-/** How far parts travel at explode = 1, in world units. */
-export const EXPLODE_SPREAD = 2.4
-
 /** Palette endpoints for the two themes. */
 export const THEME = {
-  dark: { bg: '#0d0f12', fg: '#f2f0ec', muted: '#7c828c', solid: '#3c4149', line: '#f2f0ec' },
-  light: { bg: '#e8e6e1', fg: '#1a1c20', muted: '#6b7079', solid: '#c9c5bc', line: '#33363c' },
+  dark: { bg: '#07080b', fg: '#f2f0ec', muted: '#7c828c', point: '#8f9aad' },
+  light: { bg: '#e8e6e1', fg: '#16181c', muted: '#6b7079', point: '#3a3f47' },
 } as const

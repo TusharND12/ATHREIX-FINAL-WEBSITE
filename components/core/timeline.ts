@@ -4,94 +4,104 @@ import { sceneState } from './sceneState'
 
 /**
  * The master timeline. One paused timeline, total duration 1, driven directly
- * by scroll progress. Every position and duration is expressed in progress
- * units taken from lib/acts.ts, so re-pacing the page means editing `vh`
- * numbers there — not re-keying anything here.
+ * by scroll progress. Positions come from lib/acts.ts, so re-pacing the page
+ * means editing `vh` numbers there — not re-keying anything here.
  *
- * Rotation is kept deliberately shallow throughout. The cluster is made of flat
- * panels; swing it far and you are looking at the backs of screens, which reads
- * as a mistake rather than a reveal. Depth comes from the devices' own
- * arrangement instead.
+ * The five morph weights are the spine. Each act hands off by fading its weight
+ * out while the next fades in, which is why intermediate scroll positions look
+ * like real in-between shapes rather than a cut.
  */
+
+const KEYS = {
+  noise: 'wNoise',
+  cluster: 'wCluster',
+  manifold: 'wManifold',
+  glyph: 'wGlyph',
+  stream: 'wStream',
+} as const
+
+/** Crossfade the field from one target layout to another over an act. */
+function morph(
+  tl: gsap.core.Timeline,
+  actId: string,
+  from: keyof typeof KEYS,
+  to: keyof typeof KEYS,
+  opts: { at?: number; span?: number } = {},
+) {
+  const s = sceneState
+  const start = at(actId) + dur(actId) * (opts.at ?? 0)
+  const span = dur(actId) * (opts.span ?? 1)
+  tl.to(s, { [KEYS[from]]: 0, duration: span }, start)
+  tl.to(s, { [KEYS[to]]: 1, duration: span }, start)
+}
+
 export function buildTimeline() {
   const s = sceneState
   const tl = gsap.timeline({ paused: true, defaults: { ease: 'none' } })
 
-  // --- HERO — the estate, square-on, display live --------------------------
-  tl.fromTo(s, { camZ: 13.9 }, { camZ: 12.9, duration: dur('hero') }, at('hero'))
-    .fromTo(
-      s,
-      { rotY: -0.06, rotX: -0.07 },
-      { rotY: 0.02, rotX: -0.04, duration: dur('hero') },
-      at('hero'),
-    )
+  // --- HERO — a drifting field of noise ------------------------------------
+  tl.fromTo(s, { camZ: 16.5 }, { camZ: 15.2, duration: dur('hero') }, at('hero'))
+    .fromTo(s, { spin: 0 }, { spin: 0.16, duration: dur('hero') }, at('hero'))
 
-  // --- ORBIT — turn the array to inspect it --------------------------------
-  // The stage goes first: it is a flat DOM rectangle and cannot follow the
-  // display into perspective, so it hands off before the tilt begins.
-  tl.to(s, { stage: 0, duration: dur('orbit') * 0.28 }, at('orbit'))
-    .to(s, { camZ: 15.6, camY: 1.9, duration: dur('orbit') }, at('orbit'))
-    .to(s, { rotY: 0.38, rotX: -0.24, duration: dur('orbit') }, at('orbit'))
+  // --- INGEST — the cloud pulls inward and begins to settle ----------------
+  tl.to(s, { camZ: 13.4, drift: 0.2, duration: dur('ingest') }, at('ingest'))
+    .to(s, { spin: 0.42, duration: dur('ingest') }, at('ingest'))
 
-  // --- EXPLODE — the estate separates --------------------------------------
-  tl.to(s, { explode: 1, duration: dur('explode') }, at('explode'))
-    .to(s, { rotY: 0.62, rotX: -0.3, camZ: 19.4, duration: dur('explode') }, at('explode'))
+  // --- EMBED — noise resolves into clusters --------------------------------
+  // The most important beat on the page: unstructured input visibly acquiring
+  // structure. Give it most of the act.
+  morph(tl, 'embed', 'noise', 'cluster', { span: 0.72 })
+  tl.to(s, { drift: 0.1, size: 4.3, duration: dur('embed') }, at('embed'))
+    .to(s, { spin: 0.85, tilt: -0.12, duration: dur('embed') }, at('embed'))
 
-  // --- BLUEPRINT — line art, theme inverts ---------------------------------
-  // Settles back toward square-on: the annotations are meant to be read, and a
-  // steep angle makes an exploded diagram illegible.
-  tl.to(s, { blueprint: 1, duration: dur('blueprint') * 0.13 }, at('blueprint'))
-    .to(s, { theme: 1, duration: dur('blueprint') * 0.13 }, at('blueprint') + dur('blueprint') * 0.04)
+  // --- RETRIEVE — one cluster is spotlighted, the rest recede --------------
+  tl.to(s, { focus: 3, duration: 0.001 }, at('retrieve') + dur('retrieve') * 0.2)
+    .to(s, { camZ: 10.6, duration: dur('retrieve') }, at('retrieve'))
+    .to(s, { spin: 1.22, duration: dur('retrieve') }, at('retrieve'))
+    .to(s, { panel: 1, duration: dur('retrieve') * 0.12 }, at('retrieve') + dur('retrieve') * 0.18)
+    // Release the spotlight before the manifold forms, or the fold looks broken.
+    .to(s, { focus: -1, duration: 0.001 }, at('retrieve') + dur('retrieve') * 0.88)
+
+  // --- REASON — clusters fold into a manifold ------------------------------
+  // Camera lifts and the field tilts: a swiss roll seen edge-on is a smear, and
+  // the whole point of this beat is that the structure is legible.
+  morph(tl, 'reason', 'cluster', 'manifold', { span: 0.72 })
+  tl.to(s, { camZ: 12.4, camY: 1.8, duration: dur('reason') }, at('reason'))
+    .to(s, { spin: 1.95, tilt: -0.34, duration: dur('reason') }, at('reason'))
+
+  // --- GUARDRAILS — theme inverts; the audit moment ------------------------
+  // The field holds its shape and the page changes around it, which reads as
+  // inspection rather than transformation. The flip is fast on purpose: at
+  // theme 0.5 the ground and the points lerp to nearly the same value and
+  // contrast collapses, so we snap through that midpoint rather than easing.
+  tl.to(s, { theme: 1, duration: dur('guardrails') * 0.1 }, at('guardrails'))
+    .to(s, { accentMix: 0.3, size: 3.4, duration: dur('guardrails') * 0.16 }, at('guardrails'))
+    .to(s, { spin: 2.7, tilt: -0.12, camY: 0.6, duration: dur('guardrails') }, at('guardrails'))
     .to(
       s,
-      { rotY: 0.12, rotX: -0.06, camY: 0.4, duration: dur('blueprint') },
-      at('blueprint'),
+      { theme: 0, accentMix: 0.6, size: 4.2, duration: dur('guardrails') * 0.1 },
+      at('guardrails') + dur('guardrails') * 0.86,
     )
 
-  // --- ENTER — reassemble and push in to the display -----------------------
-  tl.to(s, { explode: 0, duration: dur('enter') * 0.55 }, at('enter'))
-    .to(s, { blueprint: 0, theme: 0, duration: dur('enter') * 0.16 }, at('enter'))
-    .to(s, { rotY: 0, rotX: 0, camY: 0, duration: dur('enter') * 0.55 }, at('enter'))
-    .to(s, { camZ: 7.4, camX: -2.0, duration: dur('enter') * 0.6 }, at('enter') + dur('enter') * 0.4)
-    .to(s, { stage: 1, duration: dur('enter') * 0.3 }, at('enter') + dur('enter') * 0.7)
-
-  // --- CAPABILITIES — camera holds on the display --------------------------
-  // Almost nothing moves in 3D here on purpose. The demos on the screen carry
-  // these sections; the cluster only breathes so the frame is not frozen.
-  const caps = ['cap-retrieval', 'cap-inference', 'cap-guardrails']
-  caps.forEach((id, i) => {
-    tl.to(s, { rotY: (i + 1) * 0.012, duration: dur(id) }, at(id))
-  })
-
-  // --- MODULAR — back out, invert, scatter ---------------------------------
-  tl.to(s, { stage: 0, duration: dur('modular') * 0.2 }, at('modular'))
-    .to(s, { camZ: 19.8, camX: 0, duration: dur('modular') * 0.45 }, at('modular'))
-    // Blueprint leads the theme flip. If the solids are still visible when the
-    // background goes light they wash out into it for a beat.
-    .to(s, { blueprint: 1, duration: dur('modular') * 0.1 }, at('modular') + dur('modular') * 0.2)
-    .to(s, { theme: 1, duration: dur('modular') * 0.1 }, at('modular') + dur('modular') * 0.24)
+  // --- RESOLVE — the manifold collapses into the mark ----------------------
+  // Spin and tilt unwind to zero, otherwise the mark reads as a skewed smear
+  // instead of a logo.
+  morph(tl, 'resolve', 'manifold', 'glyph', { span: 0.76 })
+  tl.to(s, { panel: 0, duration: dur('resolve') * 0.12 }, at('resolve'))
     .to(
       s,
-      { explode: 1.3, rotY: -0.34, rotX: -0.26, duration: dur('modular') * 0.8 },
-      at('modular') + dur('modular') * 0.2,
+      { spin: Math.PI * 2, tilt: 0, camY: 0, camZ: 11.5, drift: 0.045, duration: dur('resolve') * 0.8 },
+      at('resolve'),
     )
+    .to(s, { size: 3.6, duration: dur('resolve') * 0.8 }, at('resolve'))
 
-  // --- OUTRO — settle back to the assembled hero pose ----------------------
-  tl.to(
-    s,
-    {
-      explode: 0,
-      blueprint: 0,
-      theme: 0,
-      camX: 0,
-      duration: dur('outro') * 0.14,
-    },
-    at('outro'),
-  ).to(
-    s,
-    { camZ: 13.6, rotX: -0.05, rotY: 0, duration: dur('outro') * 0.6 },
-    at('outro'),
-  )
+  // --- DELIVER — the mark breaks into a stream flowing at the viewer -------
+  morph(tl, 'deliver', 'glyph', 'stream', { span: 0.62 })
+  tl.to(s, { camZ: 8.2, drift: 0.09, size: 3.9, duration: dur('deliver') }, at('deliver'))
+
+  // --- OUTRO — settles back to a calm field --------------------------------
+  morph(tl, 'outro', 'stream', 'noise', { span: 0.6 })
+  tl.to(s, { camZ: 15.4, drift: 0.32, duration: dur('outro') }, at('outro'))
 
   return tl
 }
