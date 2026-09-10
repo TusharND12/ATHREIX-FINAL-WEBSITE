@@ -1,0 +1,48 @@
+@import "tailwindcss";
+
+/*
+ * Theme tokens.
+ *
+ * These four are written from JS every frame — --bg/--fg/--muted by Rig (lerped
+ * from the scroll-driven theme value) and --accent by SmoothScroll. The values
+ * here are only the pre-hydration defaults, so the first paint is not white.
+ * Do not set them anywhere else.
+ */
+:root {
+  --bg: #0d0f12;
+  --fg: #f2f0ec;
+  --muted: #7c828c;
+  --accent: #ff5a5f;
+
+  /* Scroll progress, 0..1 */
+  --sp: 0;
+
+  /* Aperture registration, written by Rig each frame */
+  --ap-x: 50vw;
+  --ap-y: 50vh;
+  --ap-r: 0px;
+  --stage-in: 0;
+}
+
+html {
+  background: var(--bg);
+  /* Lenis drives scrolling; native smooth scroll fights it. */
+  scroll-behavior: auto;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  overflow-x: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
